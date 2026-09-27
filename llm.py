@@ -6,7 +6,7 @@ import base64
 import io
 from PIL import Image
 
-GEMINI_MODEL = "gemini-1.5-flash"
+GEMINI_MODEL = "gemini-2.0-flash"
 GEMINI_BASE  = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}"
 
 AUDIO_MIME = {
