@@ -192,16 +192,22 @@ with st.sidebar:
     st.divider()
 
     # API key — prefer Streamlit secrets, then env var, then user input
-    secret_key  = st.secrets.get("GOOGLE_API_KEY", "") if hasattr(st, "secrets") else ""
-    env_key     = os.getenv("GOOGLE_API_KEY", "")
-    default_key = secret_key or env_key
+    # Built-in key (Streamlit secrets or env var) is used behind the scenes and
+    # never shown or pre-filled in the input, so it can't leak through the
+    # password field's reveal icon on the public demo. Visitors can still
+    # paste their own key to use instead.
+    secret_key = st.secrets.get("GOOGLE_API_KEY", "") if hasattr(st, "secrets") else ""
+    env_key    = os.getenv("GOOGLE_API_KEY", "")
+    built_in_key = secret_key or env_key
 
-    api_key = st.text_input(
+    user_key = st.text_input(
         "Google Gemini API Key",
-        value=default_key,
+        value="",
         type="password",
-        help="Free key from aistudio.google.com. No credit card needed.",
+        placeholder="Using the built-in demo key" if built_in_key else "Paste your free key here",
+        help="Free key from aistudio.google.com. No credit card needed. Leave blank to use the demo's key.",
     )
+    api_key = user_key or built_in_key
     if api_key:
         os.environ["GOOGLE_API_KEY"] = api_key
 
