@@ -108,24 +108,33 @@ def _post(model: str, parts: list, system_prompt: str = ""):
     return requests.post(
         f"{GEMINI_BASE}/{model}:generateContent?key={_api_key()}",
         json=payload,
-        timeout=(30, 120),
+        # Shorter read timeout on purpose: we have several fallback models to
+        # try, so we'd rather bail out of a stuck one quickly and move on
+        # than burn the whole budget waiting on a single overloaded model.
+        timeout=(15, 45),
     )
 
 
 def _call(parts: list, system_prompt: str = "") -> str:
     """
     Core Gemini REST call with automatic model fallback.
-    Tries each candidate model; on 404 (model missing) or 503/429
-    (overloaded/rate-limited) it moves to the next one. Any other error
-    (e.g. bad request, auth) is raised immediately since retrying a
-    different model won't fix it.
+    Tries each candidate model; on 404 (model missing), 503/429
+    (overloaded/rate-limited), or a network timeout/connection error, it
+    moves to the next one. Any other error (e.g. bad request, auth) is
+    raised immediately since retrying a different model won't fix it.
     """
+    import requests
+
     global _working_model
 
     last_error = None
     for model in _candidate_models():
-        for attempt in range(2):  # one quick retry per model on 503
-            resp = _post(model, parts, system_prompt)
+        for attempt in range(2):  # one quick retry per model on 503/timeout
+            try:
+                resp = _post(model, parts, system_prompt)
+            except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
+                last_error = RuntimeError(f"Gemini request timed out / connection error ({model}): {e}")
+                break  # this model is unresponsive right now, try the next one
 
             if resp.status_code == 200:
                 try:
@@ -143,7 +152,7 @@ def _call(parts: list, system_prompt: str = "") -> str:
             if resp.status_code in (503, 429):
                 last_error = RuntimeError(f"Gemini API error {resp.status_code} ({model}): {resp.text[:300]}")
                 if attempt == 0:
-                    time.sleep(2)  # brief pause, model may just be momentarily busy
+                    time.sleep(1.5)  # brief pause, model may just be momentarily busy
                     continue
                 break  # give up on this model, try next
 
