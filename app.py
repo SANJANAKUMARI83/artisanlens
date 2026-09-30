@@ -30,7 +30,36 @@ st.markdown("""
         background: radial-gradient(circle at 15% 0%, #FFF9F3 0%, #FDF3E7 45%, #FAEBDA 100%);
     }
 
-    .block-container { padding-top: 2.4rem; padding-bottom: 3rem; }
+    /* Push content below Streamlit's own top toolbar so the badge/header never gets clipped */
+    header[data-testid="stHeader"] { background: transparent !important; }
+    .block-container { padding-top: 4.2rem !important; padding-bottom: 3rem; }
+
+    /* Force readable dark text everywhere in the main content area, regardless of the
+       app's base theme, so placeholders/labels/hints never end up white-on-white. */
+    [data-testid="stAppViewContainer"] section.main,
+    [data-testid="stAppViewContainer"] section.main p,
+    [data-testid="stAppViewContainer"] section.main span,
+    [data-testid="stAppViewContainer"] section.main label,
+    [data-testid="stAppViewContainer"] section.main li,
+    [data-testid="stAppViewContainer"] section.main div {
+        color: #2C1810;
+    }
+    [data-testid="stAppViewContainer"] section.main .stTextInput input,
+    [data-testid="stAppViewContainer"] section.main .stTextArea textarea {
+        color: #2C1810 !important;
+    }
+    [data-testid="stAppViewContainer"] section.main ::placeholder {
+        color: #A08D7C !important; opacity: 1 !important;
+    }
+    [data-testid="stAppViewContainer"] section.main [data-testid="stFileUploaderDropzoneInstructions"] * {
+        color: #6B4C3B !important;
+    }
+    [data-testid="stAppViewContainer"] section.main [data-testid="stFileUploaderDropzoneInstructions"] small {
+        color: #A08D7C !important;
+    }
+    [data-testid="stAppViewContainer"] section.main [data-testid="stBaseButton-secondary"] {
+        color: #2C1810 !important;
+    }
 
     /* ── Sidebar ── */
     section[data-testid="stSidebar"] {
@@ -47,7 +76,7 @@ st.markdown("""
 
     /* ── Hero header ── */
     .hero-badge {
-        display: inline-block; background: rgba(232,98,42,.12); color: #C6491A; font-weight: 600;
+        display: inline-block; background: rgba(232,98,42,.12); color: #C6491A !important; font-weight: 600;
         font-size: .72rem; letter-spacing: .09em; text-transform: uppercase; padding: .4rem 1rem;
         border-radius: 999px; margin-bottom: .8rem; border: 1px solid rgba(232,98,42,.25);
     }
@@ -66,7 +95,7 @@ st.markdown("""
     .step-row { display: flex; align-items: center; gap: .7rem; margin: 2rem 0 .9rem 0; }
     .step-num {
         display: flex; align-items: center; justify-content: center; width: 30px; height: 30px;
-        border-radius: 50%; background: linear-gradient(135deg, #E8622A, #C6491A); color: white;
+        border-radius: 50%; background: linear-gradient(135deg, #E8622A, #C6491A); color: white !important;
         font-weight: 700; font-size: .9rem; flex-shrink: 0; box-shadow: 0 3px 8px rgba(232,98,42,.35);
     }
     .step-label { font-size: 1.18rem; font-weight: 700; color: #2C1810; margin: 0; font-family: 'Playfair Display', serif; }
@@ -84,7 +113,7 @@ st.markdown("""
     .copy-hint { font-size: .8rem; color: #A08D7C; margin-top: -.05rem; margin-bottom: .7rem; }
 
     .price-badge {
-        background: linear-gradient(90deg, #E8622A, #F08A50); color: white; padding: .5rem 1.2rem;
+        background: linear-gradient(90deg, #E8622A, #F08A50); color: white !important; padding: .5rem 1.2rem;
         border-radius: 999px; font-weight: 700; font-size: 1.2rem; display: inline-block;
         box-shadow: 0 6px 16px rgba(232,98,42,.3); letter-spacing: .01em;
     }
@@ -100,6 +129,7 @@ st.markdown("""
         background: linear-gradient(100deg, #E8622A, #D6501C) !important; border: none !important;
         box-shadow: 0 8px 20px rgba(232,98,42,.35) !important;
     }
+    .stButton>button[kind="primary"] * { color: white !important; }
     .stButton>button[kind="primary"]:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(232,98,42,.42) !important; }
     .stButton>button[kind="secondary"] {
         background: #FFF9F3 !important; border: 1.5px solid rgba(232,98,42,.3) !important; color: #C6491A !important;
