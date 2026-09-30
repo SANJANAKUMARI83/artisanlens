@@ -1,7 +1,7 @@
 """
-ArtisanLens — AI Listing Generator for Indian Handmade Products
-Upload a product photo + (optional) voice note → get a ready-to-post listing
-in seconds: title, description, INR price, Instagram caption, WhatsApp message.
+ArtisanLens - AI Listing Generator for Indian Handmade Products
+Upload a product photo plus an optional voice note, and get a ready-to-post
+listing in seconds: title, description, INR price, Instagram caption, WhatsApp message.
 """
 import os
 import streamlit as st
@@ -11,7 +11,7 @@ load_dotenv()
 
 # ── Page config (must be first Streamlit call) ─────────────────────────────────
 st.set_page_config(
-    page_title="ArtisanLens – AI Listing Generator",
+    page_title="ArtisanLens - AI Listing Generator",
     page_icon="🪔",
     layout="centered",
     initial_sidebar_state="expanded",
@@ -63,7 +63,7 @@ with st.sidebar:
         "Google Gemini API Key",
         value=default_key,
         type="password",
-        help="Free key from aistudio.google.com — no credit card needed.",
+        help="Free key from aistudio.google.com. No credit card needed.",
     )
     if api_key:
         os.environ["GOOGLE_API_KEY"] = api_key
@@ -82,14 +82,14 @@ with st.sidebar:
 # ── Header ─────────────────────────────────────────────────────────────────────
 st.markdown('<p class="main-header">🪔 ArtisanLens</p>', unsafe_allow_html=True)
 st.markdown(
-    '<p class="sub-header">Upload a photo of your handmade product and get a ready-to-post listing — '
+    '<p class="sub-header">Upload a photo of your handmade product and get a ready-to-post listing: '
     'title, description, price, Instagram caption, and WhatsApp message.</p>',
     unsafe_allow_html=True,
 )
 
 
 # ── Step 1: Photo ──────────────────────────────────────────────────────────────
-st.markdown('<p class="step-label">📷 Step 1 — Upload your product photo</p>', unsafe_allow_html=True)
+st.markdown('<p class="step-label">📷 Step 1: Upload your product photo</p>', unsafe_allow_html=True)
 
 photo = st.file_uploader(
     "Upload a clear photo of your product",
@@ -119,7 +119,7 @@ if photo:
 st.markdown("---")
 
 # ── Step 2: Extra info (optional) ──────────────────────────────────────────────
-st.markdown('<p class="step-label">🎙️ Step 2 — Tell us more *(optional but helpful)*</p>', unsafe_allow_html=True)
+st.markdown('<p class="step-label">🎙️ Step 2: Tell us more *(optional but helpful)*</p>', unsafe_allow_html=True)
 
 col_a, col_b = st.columns([1, 1])
 with col_a:
@@ -146,7 +146,7 @@ extra_info = st.text_area(
 st.markdown("---")
 
 # ── Step 3: Generate ───────────────────────────────────────────────────────────
-st.markdown('<p class="step-label">✨ Step 3 — Generate your listing</p>', unsafe_allow_html=True)
+st.markdown('<p class="step-label">✨ Step 3: Generate your listing</p>', unsafe_allow_html=True)
 
 ready = bool(photo and api_key)
 if not photo:
@@ -211,7 +211,7 @@ if st.button("🚀 Generate Listing", type="primary", disabled=not ready, use_co
 # ── Results ────────────────────────────────────────────────────────────────────
 if st.session_state.listing_result:
     listing = st.session_state.listing_result
-    st.success("✅ Your listing is ready — click inside any box to select all, then copy.")
+    st.success("✅ Your listing is ready. Click inside any box to select all, then copy.")
     st.markdown("---")
 
     # ── Title + tagline + price ──
@@ -243,7 +243,7 @@ if st.session_state.listing_result:
 
     # ── Instagram ──
     st.markdown("**📸 Instagram Caption**")
-    st.markdown('<p class="copy-hint">Ready to post — includes hashtags</p>', unsafe_allow_html=True)
+    st.markdown('<p class="copy-hint">Ready to post, includes hashtags</p>', unsafe_allow_html=True)
     st.text_area(
         "instagram",
         value=listing.get("instagram_caption", ""),
@@ -288,15 +288,15 @@ if st.session_state.listing_result:
             v = st.session_state.vision_result
             cols = st.columns(2)
             with cols[0]:
-                st.write(f"**Product type:** {v.get('product_type', '—')}")
-                st.write(f"**Craft:** {v.get('craft_type', '—')}")
+                st.write(f"**Product type:** {v.get('product_type', 'not detected')}")
+                st.write(f"**Craft:** {v.get('craft_type', 'not detected')}")
                 st.write(f"**Colors:** {', '.join(v.get('colors', []))}")
                 st.write(f"**Materials:** {', '.join(v.get('materials', []))}")
             with cols[1]:
-                st.write(f"**Size:** {v.get('estimated_size', '—')}")
+                st.write(f"**Size:** {v.get('estimated_size', 'not detected')}")
                 st.write(f"**Style:** {', '.join(v.get('style_tags', []))}")
-                st.write(f"**Quality signals:** {v.get('quality_signals', '—')}")
-            st.write(f"**Details:** {v.get('visible_details', '—')}")
+                st.write(f"**Quality signals:** {v.get('quality_signals', 'not detected')}")
+            st.write(f"**Details:** {v.get('visible_details', 'not detected')}")
 
     st.markdown("---")
     if st.button("🔄 Generate for another product", use_container_width=True):
