@@ -112,6 +112,22 @@ st.markdown("""
     .output-label { font-weight: 700; color: #2C1810; font-size: 1.05rem; margin-bottom: .15rem; }
     .copy-hint { font-size: .8rem; color: #A08D7C; margin-top: -.05rem; margin-bottom: .7rem; }
 
+    /* ── Required / optional field badges ── */
+    .field-badge-required {
+        background: #E8622A; color: #FFFFFF !important; font-size: .66rem; font-weight: 700;
+        letter-spacing: .05em; text-transform: uppercase; padding: .15rem .55rem;
+        border-radius: 999px; margin-left: .6rem; vertical-align: middle; display: inline-block;
+    }
+    .field-badge-optional {
+        background: transparent; color: #A08D7C !important; font-size: .66rem; font-weight: 700;
+        letter-spacing: .05em; text-transform: uppercase; padding: .13rem .55rem;
+        border: 1px solid rgba(160,141,124,.4); border-radius: 999px; margin-left: .6rem;
+        vertical-align: middle; display: inline-block;
+    }
+    .field-label {
+        font-weight: 600; color: #2C1810; font-size: .95rem; margin-bottom: .35rem;
+    }
+
     .price-badge {
         background: linear-gradient(90deg, #E8622A, #F08A50); color: white !important; padding: .5rem 1.2rem;
         border-radius: 999px; font-weight: 700; font-size: 1.2rem; display: inline-block;
@@ -235,7 +251,8 @@ st.markdown(
 # ── Step 1: Photo ──────────────────────────────────────────────────────────────
 st.markdown(
     '<div class="step-row"><span class="step-num">1</span>'
-    '<p class="step-label">Upload your product photo</p></div>',
+    '<p class="step-label">Upload your product photo'
+    '<span class="field-badge-required">Required</span></p></div>',
     unsafe_allow_html=True,
 )
 
@@ -276,17 +293,33 @@ st.markdown(
 
 col_a, col_b = st.columns([1, 1])
 with col_a:
+    st.markdown(
+        '<p class="field-label">Product name<span class="field-badge-optional">Optional</span></p>',
+        unsafe_allow_html=True,
+    )
     product_name = st.text_input(
         "Product name",
         placeholder="e.g. Handwoven Ikat Stole",
+        label_visibility="collapsed",
     )
 with col_b:
+    st.markdown(
+        '<p class="field-label">Voice note (Hindi or English, any format)'
+        '<span class="field-badge-optional">Optional</span></p>',
+        unsafe_allow_html=True,
+    )
     voice_file = st.file_uploader(
         "Voice note (Hindi or English, any format)",
         type=["mp3", "wav", "m4a", "ogg", "webm"],
         key="voice_uploader",
+        label_visibility="collapsed",
     )
 
+st.markdown(
+    '<p class="field-label">Any other details about your product'
+    '<span class="field-badge-optional">Optional</span></p>',
+    unsafe_allow_html=True,
+)
 extra_info = st.text_area(
     "Any other details about your product",
     placeholder=(
@@ -294,6 +327,7 @@ extra_info = st.text_area(
         "inspired by traditional Pochampally patterns, suitable for weddings and festivals"
     ),
     height=90,
+    label_visibility="collapsed",
 )
 
 st.markdown("---")
