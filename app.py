@@ -20,15 +20,122 @@ st.set_page_config(
 # ── Custom CSS ─────────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
-    .main-header { font-size: 2.4rem; font-weight: 800; color: #E8622A; margin-bottom: 0; }
-    .sub-header  { font-size: 1.05rem; color: #6B4C3B; margin-top: 0; margin-bottom: 1.5rem; }
-    .step-label  { font-size: 1.1rem; font-weight: 700; color: #2C1810; margin-bottom: 0.3rem; }
-    .output-box  { background: #FFF8F2; border-left: 4px solid #E8622A; padding: 1rem 1.2rem;
-                   border-radius: 6px; margin-bottom: 1rem; white-space: pre-wrap; font-size: 0.95rem; }
-    .price-badge { background: #E8622A; color: white; padding: 0.35rem 0.9rem;
-                   border-radius: 20px; font-weight: 700; font-size: 1.1rem; display: inline-block; }
-    .tagline     { font-style: italic; color: #6B4C3B; font-size: 1.05rem; margin: 0.2rem 0 1rem 0; }
-    .copy-hint   { font-size: 0.78rem; color: #999; margin-top: -0.5rem; margin-bottom: 0.8rem; }
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+
+    html, body, [class*="css"], .stApp, .stMarkdown, p, span, div, label {
+        font-family: 'Inter', -apple-system, sans-serif;
+    }
+
+    .stApp {
+        background: radial-gradient(circle at 15% 0%, #FFF9F3 0%, #FDF3E7 45%, #FAEBDA 100%);
+    }
+
+    .block-container { padding-top: 2.4rem; padding-bottom: 3rem; }
+
+    /* ── Sidebar ── */
+    section[data-testid="stSidebar"] {
+        background: linear-gradient(180deg, #2C1810 0%, #3D2317 100%);
+    }
+    section[data-testid="stSidebar"] * { color: #F3E4D4 !important; }
+    section[data-testid="stSidebar"] h2 { font-family: 'Playfair Display', serif; font-weight: 700; }
+    section[data-testid="stSidebar"] input {
+        background: #FFF9F3 !important; color: #2C1810 !important; border-radius: 10px !important;
+        border: 1px solid rgba(232,98,42,.35) !important;
+    }
+    section[data-testid="stSidebar"] hr { border-color: rgba(243,228,212,.15) !important; margin: 1.2rem 0; }
+    section[data-testid="stSidebar"] [data-testid="stCaptionContainer"] { color: #C9AC93 !important; }
+
+    /* ── Hero header ── */
+    .hero-badge {
+        display: inline-block; background: rgba(232,98,42,.12); color: #C6491A; font-weight: 600;
+        font-size: .72rem; letter-spacing: .09em; text-transform: uppercase; padding: .4rem 1rem;
+        border-radius: 999px; margin-bottom: .8rem; border: 1px solid rgba(232,98,42,.25);
+    }
+    .main-header {
+        font-family: 'Playfair Display', serif; font-size: 2.9rem; font-weight: 800;
+        background: linear-gradient(100deg, #E8622A 0%, #C6491A 60%, #A63D18 100%);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        margin-bottom: .2rem; line-height: 1.12; letter-spacing: -.01em;
+    }
+    .sub-header {
+        font-size: 1.08rem; color: #6B4C3B; margin-top: .3rem; margin-bottom: 2rem;
+        max-width: 600px; line-height: 1.6; font-weight: 400;
+    }
+
+    /* ── Step headers ── */
+    .step-row { display: flex; align-items: center; gap: .7rem; margin: 2rem 0 .9rem 0; }
+    .step-num {
+        display: flex; align-items: center; justify-content: center; width: 30px; height: 30px;
+        border-radius: 50%; background: linear-gradient(135deg, #E8622A, #C6491A); color: white;
+        font-weight: 700; font-size: .9rem; flex-shrink: 0; box-shadow: 0 3px 8px rgba(232,98,42,.35);
+    }
+    .step-label { font-size: 1.18rem; font-weight: 700; color: #2C1810; margin: 0; font-family: 'Playfair Display', serif; }
+    .step-hint { font-size: .85rem; color: #A08D7C; margin: -.4rem 0 1rem 2.4rem; }
+
+    /* ── Cards (bordered containers) ── */
+    div[data-testid="stVerticalBlockBorderWrapper"] {
+        border-radius: 18px !important;
+        box-shadow: 0 4px 20px rgba(44,24,16,.06);
+        background: #FFFFFF;
+    }
+    div[data-testid="stVerticalBlockBorderWrapper"] > div { border-radius: 18px !important; }
+
+    .output-label { font-weight: 700; color: #2C1810; font-size: 1.05rem; margin-bottom: .15rem; }
+    .copy-hint { font-size: .8rem; color: #A08D7C; margin-top: -.05rem; margin-bottom: .7rem; }
+
+    .price-badge {
+        background: linear-gradient(90deg, #E8622A, #F08A50); color: white; padding: .5rem 1.2rem;
+        border-radius: 999px; font-weight: 700; font-size: 1.2rem; display: inline-block;
+        box-shadow: 0 6px 16px rgba(232,98,42,.3); letter-spacing: .01em;
+    }
+    .tagline { font-style: italic; color: #8A6A55; font-size: 1.1rem; margin: .4rem 0 1.1rem 0; font-family: 'Playfair Display', serif; }
+    .product-title { font-family: 'Playfair Display', serif; font-weight: 700; color: #2C1810; font-size: 1.7rem; margin-bottom: .2rem; }
+
+    /* ── Buttons ── */
+    .stButton>button {
+        border-radius: 12px !important; font-weight: 700 !important; letter-spacing: .01em;
+        padding: .65rem 1rem !important; transition: transform .15s ease, box-shadow .15s ease;
+    }
+    .stButton>button[kind="primary"] {
+        background: linear-gradient(100deg, #E8622A, #D6501C) !important; border: none !important;
+        box-shadow: 0 8px 20px rgba(232,98,42,.35) !important;
+    }
+    .stButton>button[kind="primary"]:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(232,98,42,.42) !important; }
+    .stButton>button[kind="secondary"] {
+        background: #FFF9F3 !important; border: 1.5px solid rgba(232,98,42,.3) !important; color: #C6491A !important;
+    }
+    .stButton>button:hover { transform: translateY(-1px); }
+
+    /* ── File uploader ── */
+    [data-testid="stFileUploaderDropzone"] {
+        border-radius: 14px !important; border: 1.5px dashed rgba(232,98,42,.4) !important;
+        background: rgba(232,98,42,.03) !important;
+    }
+
+    /* ── Inputs ── */
+    .stTextArea textarea, .stTextInput input {
+        border-radius: 10px !important; border: 1px solid rgba(44,24,16,.12) !important;
+        background: #FFFFFF !important;
+    }
+    .stTextArea textarea:focus, .stTextInput input:focus {
+        border-color: rgba(232,98,42,.5) !important; box-shadow: 0 0 0 1px rgba(232,98,42,.2) !important;
+    }
+
+    /* ── Divider ── */
+    hr {
+        border: none; height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(232,98,42,.35), transparent);
+        margin: 1.8rem 0;
+    }
+
+    /* ── Expander ── */
+    [data-testid="stExpander"] {
+        border-radius: 14px !important; border: 1px solid rgba(44,24,16,.08) !important; overflow: hidden;
+        background: #FFFFFF;
+    }
+
+    /* ── Alerts ── */
+    [data-testid="stAlert"] { border-radius: 12px !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -76,10 +183,11 @@ with st.sidebar:
         "3. Click **Generate** → copy your listing"
     )
     st.divider()
-    st.caption("Built for the AI for Handmade Challenge 🏆\nPowered by Gemini 1.5 Flash")
+    st.caption("Built for the AI for Handmade Challenge 🏆\nPowered by Google Gemini")
 
 
 # ── Header ─────────────────────────────────────────────────────────────────────
+st.markdown('<span class="hero-badge">✦ Made for Indian Artisans</span>', unsafe_allow_html=True)
 st.markdown('<p class="main-header">🪔 ArtisanLens</p>', unsafe_allow_html=True)
 st.markdown(
     '<p class="sub-header">Upload a photo of your handmade product and get a ready-to-post listing: '
@@ -89,7 +197,11 @@ st.markdown(
 
 
 # ── Step 1: Photo ──────────────────────────────────────────────────────────────
-st.markdown('<p class="step-label">📷 Step 1: Upload your product photo</p>', unsafe_allow_html=True)
+st.markdown(
+    '<div class="step-row"><span class="step-num">1</span>'
+    '<p class="step-label">Upload your product photo</p></div>',
+    unsafe_allow_html=True,
+)
 
 photo = st.file_uploader(
     "Upload a clear photo of your product",
@@ -119,7 +231,12 @@ if photo:
 st.markdown("---")
 
 # ── Step 2: Extra info (optional) ──────────────────────────────────────────────
-st.markdown('<p class="step-label">🎙️ Step 2: Tell us more *(optional but helpful)*</p>', unsafe_allow_html=True)
+st.markdown(
+    '<div class="step-row"><span class="step-num">2</span>'
+    '<p class="step-label">Tell us more</p></div>'
+    '<p class="step-hint">Optional, but it makes a real difference to the result</p>',
+    unsafe_allow_html=True,
+)
 
 col_a, col_b = st.columns([1, 1])
 with col_a:
@@ -146,7 +263,11 @@ extra_info = st.text_area(
 st.markdown("---")
 
 # ── Step 3: Generate ───────────────────────────────────────────────────────────
-st.markdown('<p class="step-label">✨ Step 3: Generate your listing</p>', unsafe_allow_html=True)
+st.markdown(
+    '<div class="step-row"><span class="step-num">3</span>'
+    '<p class="step-label">Generate your listing</p></div>',
+    unsafe_allow_html=True,
+)
 
 ready = bool(photo and api_key)
 if not photo:
@@ -220,63 +341,66 @@ if st.session_state.listing_result:
     price   = listing.get("price_range_inr", "")
     rationale = listing.get("price_rationale", "")
 
-    st.markdown(f"### {title}")
-    if tagline:
-        st.markdown(f'<p class="tagline">"{tagline}"</p>', unsafe_allow_html=True)
-    if price:
-        st.markdown(f'<span class="price-badge">{price}</span>', unsafe_allow_html=True)
-        if rationale:
-            st.caption(rationale)
-
-    st.markdown("---")
+    with st.container(border=True):
+        st.markdown(f'<p class="product-title">{title}</p>', unsafe_allow_html=True)
+        if tagline:
+            st.markdown(f'<p class="tagline">"{tagline}"</p>', unsafe_allow_html=True)
+        if price:
+            st.markdown(f'<span class="price-badge">{price}</span>', unsafe_allow_html=True)
+            if rationale:
+                st.caption(rationale)
 
     # ── Description ──
-    st.markdown("**📝 Product Description**")
-    st.markdown('<p class="copy-hint">Copy and paste to your marketplace listing, website, or bio</p>', unsafe_allow_html=True)
-    st.text_area(
-        "description",
-        value=listing.get("description", ""),
-        height=200,
-        label_visibility="collapsed",
-        key="out_desc",
-    )
+    with st.container(border=True):
+        st.markdown('<p class="output-label">📝 Product Description</p>', unsafe_allow_html=True)
+        st.markdown('<p class="copy-hint">Copy and paste to your marketplace listing, website, or bio</p>', unsafe_allow_html=True)
+        st.text_area(
+            "description",
+            value=listing.get("description", ""),
+            height=200,
+            label_visibility="collapsed",
+            key="out_desc",
+        )
 
     # ── Instagram ──
-    st.markdown("**📸 Instagram Caption**")
-    st.markdown('<p class="copy-hint">Ready to post, includes hashtags</p>', unsafe_allow_html=True)
-    st.text_area(
-        "instagram",
-        value=listing.get("instagram_caption", ""),
-        height=180,
-        label_visibility="collapsed",
-        key="out_insta",
-    )
+    with st.container(border=True):
+        st.markdown('<p class="output-label">📸 Instagram Caption</p>', unsafe_allow_html=True)
+        st.markdown('<p class="copy-hint">Ready to post, includes hashtags</p>', unsafe_allow_html=True)
+        st.text_area(
+            "instagram",
+            value=listing.get("instagram_caption", ""),
+            height=180,
+            label_visibility="collapsed",
+            key="out_insta",
+        )
 
     # ── WhatsApp ──
-    st.markdown("**💬 WhatsApp Message**")
-    st.markdown('<p class="copy-hint">Paste into WhatsApp Business catalogue or send directly to customers</p>', unsafe_allow_html=True)
-    st.text_area(
-        "whatsapp",
-        value=listing.get("whatsapp_message", ""),
-        height=130,
-        label_visibility="collapsed",
-        key="out_wa",
-    )
+    with st.container(border=True):
+        st.markdown('<p class="output-label">💬 WhatsApp Message</p>', unsafe_allow_html=True)
+        st.markdown('<p class="copy-hint">Paste into WhatsApp Business catalogue or send directly to customers</p>', unsafe_allow_html=True)
+        st.text_area(
+            "whatsapp",
+            value=listing.get("whatsapp_message", ""),
+            height=130,
+            label_visibility="collapsed",
+            key="out_wa",
+        )
 
     # ── Keywords + target buyers ──
-    col_k, col_t = st.columns(2)
-    with col_k:
-        keywords = listing.get("keywords", [])
-        if keywords:
-            st.markdown("**🔍 Search Keywords**")
-            st.write("  ·  ".join(keywords))
+    with st.container(border=True):
+        col_k, col_t = st.columns(2)
+        with col_k:
+            keywords = listing.get("keywords", [])
+            if keywords:
+                st.markdown('<p class="output-label">🔍 Search Keywords</p>', unsafe_allow_html=True)
+                st.write("  ·  ".join(keywords))
 
-    with col_t:
-        buyers = listing.get("target_buyers", [])
-        if buyers:
-            st.markdown("**👥 Target Buyers**")
-            for b in buyers:
-                st.write(f"• {b}")
+        with col_t:
+            buyers = listing.get("target_buyers", [])
+            if buyers:
+                st.markdown('<p class="output-label">👥 Target Buyers</p>', unsafe_allow_html=True)
+                for b in buyers:
+                    st.write(f"• {b}")
 
     # ── Collapsed: voice transcript + vision details ──
     if st.session_state.voice_transcript:
