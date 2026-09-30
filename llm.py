@@ -1,13 +1,33 @@
 # LLM wrapper using Google Gemini REST API (free tier via Google AI Studio).
 # No SDK needed — just requests. Handles text, vision (image), and audio.
+#
+# Self-healing model selection: Google keeps renaming/retiring Gemini model
+# ids (gemini-1.5-flash -> gemini-2.0-flash -> gemini-3.8-flash ...) and the
+# newest "flash" model is often overloaded (503) on the free tier because
+# everyone's demo traffic lands on it. Instead of hardcoding one name, we
+# try a short list of candidates in order, and on a 404 (model doesn't
+# exist) or 503 (overloaded) we automatically fall through to the next one.
+# Whichever one succeeds first is cached for the rest of the process.
 import os
 import json
 import base64
 import io
+import time
 from PIL import Image
 
-GEMINI_MODEL = "gemini-3.8-flash"
-GEMINI_BASE  = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}"
+GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta/models"
+
+# Ordered oldest/most-stable -> newest. Older "-latest" aliases tend to have
+# looser free-tier quota than the newest preview model, so we prefer them
+# first for reliability, and still pick up new models automatically via
+# the discovery step below.
+FALLBACK_MODELS = [
+    "gemini-flash-latest",
+    "gemini-2.5-flash",
+    "gemini-2.0-flash",
+    "gemini-1.5-flash-latest",
+    "gemini-3.8-flash",
+]
 
 AUDIO_MIME = {
     "mp3":  "audio/mp3",
@@ -17,6 +37,10 @@ AUDIO_MIME = {
     "webm": "audio/webm",
     "aac":  "audio/aac",
 }
+
+# Cache the model that last worked so we don't re-probe on every call.
+_working_model = None
+_discovered_models = None
 
 
 # ── Internal helpers ──────────────────────────────────────────────────────────
@@ -28,28 +52,105 @@ def _api_key() -> str:
     return key
 
 
-def _call(parts: list, system_prompt: str = "") -> str:
-    """Core Gemini REST call. parts is a list of text/inline_data dicts."""
+def _discover_models() -> list:
+    """
+    Ask Google which models actually exist right now and support
+    generateContent. Used as an extra source of candidates so we're not
+    solely dependent on our hardcoded FALLBACK_MODELS list staying current.
+    Best-effort: returns [] on any failure.
+    """
+    global _discovered_models
+    if _discovered_models is not None:
+        return _discovered_models
+
+    import requests
+    try:
+        resp = requests.get(
+            f"{GEMINI_BASE}?key={_api_key()}",
+            timeout=(10, 30),
+        )
+        resp.raise_for_status()
+        models = resp.json().get("models", [])
+        names = [
+            m["name"].split("/")[-1]
+            for m in models
+            if "generateContent" in m.get("supportedGenerationMethods", [])
+            and "flash" in m["name"]
+        ]
+        # Prefer non-preview/non-exp names first (more stable quota).
+        names.sort(key=lambda n: ("preview" in n or "exp" in n, n))
+        _discovered_models = names
+    except Exception:
+        _discovered_models = []
+    return _discovered_models
+
+
+def _candidate_models() -> list:
+    ordered = []
+    if _working_model:
+        ordered.append(_working_model)
+    for name in FALLBACK_MODELS:
+        if name not in ordered:
+            ordered.append(name)
+    for name in _discover_models():
+        if name not in ordered:
+            ordered.append(name)
+    return ordered
+
+
+def _post(model: str, parts: list, system_prompt: str = ""):
     import requests
 
     payload: dict = {"contents": [{"parts": parts}]}
     if system_prompt:
         payload["system_instruction"] = {"parts": [{"text": system_prompt}]}
 
-    resp = requests.post(
-        f"{GEMINI_BASE}:generateContent?key={_api_key()}",
+    return requests.post(
+        f"{GEMINI_BASE}/{model}:generateContent?key={_api_key()}",
         json=payload,
         timeout=(30, 120),
     )
-    try:
-        resp.raise_for_status()
-    except Exception:
-        raise RuntimeError(f"Gemini API error {resp.status_code}: {resp.text[:300]}")
 
-    try:
-        return resp.json()["candidates"][0]["content"]["parts"][0]["text"]
-    except (KeyError, IndexError) as e:
-        raise RuntimeError(f"Unexpected Gemini response: {resp.text[:300]}") from e
+
+def _call(parts: list, system_prompt: str = "") -> str:
+    """
+    Core Gemini REST call with automatic model fallback.
+    Tries each candidate model; on 404 (model missing) or 503/429
+    (overloaded/rate-limited) it moves to the next one. Any other error
+    (e.g. bad request, auth) is raised immediately since retrying a
+    different model won't fix it.
+    """
+    global _working_model
+
+    last_error = None
+    for model in _candidate_models():
+        for attempt in range(2):  # one quick retry per model on 503
+            resp = _post(model, parts, system_prompt)
+
+            if resp.status_code == 200:
+                try:
+                    text = resp.json()["candidates"][0]["content"]["parts"][0]["text"]
+                except (KeyError, IndexError) as e:
+                    last_error = RuntimeError(f"Unexpected Gemini response: {resp.text[:300]}")
+                    break
+                _working_model = model
+                return text
+
+            if resp.status_code == 404:
+                last_error = RuntimeError(f"Gemini API error 404 ({model}): {resp.text[:300]}")
+                break  # try next model, no point retrying same one
+
+            if resp.status_code in (503, 429):
+                last_error = RuntimeError(f"Gemini API error {resp.status_code} ({model}): {resp.text[:300]}")
+                if attempt == 0:
+                    time.sleep(2)  # brief pause, model may just be momentarily busy
+                    continue
+                break  # give up on this model, try next
+
+            # Any other error (400, 401, 403, 500...) — not fixable by switching models.
+            raise RuntimeError(f"Gemini API error {resp.status_code} ({model}): {resp.text[:300]}")
+
+    raise last_error or RuntimeError("All Gemini model candidates failed.")
 
 
 def _parse_json(raw: str) -> dict:
