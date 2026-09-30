@@ -46,45 +46,52 @@ def build_listing_prompt(
 ) -> str:
     """Assemble context from all inputs and build the main listing generation prompt."""
 
-    lines = []
-
+    artisan_lines = []
     if product_name:
-        lines.append(f"Product name (artisan's own): {product_name}")
+        artisan_lines.append(f"Product name, given by the artisan themselves: \"{product_name}\"")
+    if voice_text:
+        artisan_lines.append(f"Artisan's own words, transcribed from their voice note: \"{voice_text}\"")
+    if extra_info:
+        artisan_lines.append(f"Extra details the artisan typed in: \"{extra_info}\"")
 
+    photo_lines = []
     if vision:
-        lines.append(f"Product type (from photo): {vision.get('product_type', '')}")
-        lines.append(f"Craft technique: {vision.get('craft_type', '')}")
+        photo_lines.append(f"Product type (from photo): {vision.get('product_type', '')}")
+        photo_lines.append(f"Craft technique: {vision.get('craft_type', '')}")
         colors = vision.get("colors", [])
         if colors:
-            lines.append(f"Colors: {', '.join(colors)}")
+            photo_lines.append(f"Colors: {', '.join(colors)}")
         materials = vision.get("materials", [])
         if materials:
-            lines.append(f"Materials: {', '.join(materials)}")
+            photo_lines.append(f"Materials: {', '.join(materials)}")
         if vision.get("visible_details"):
-            lines.append(f"Visible details: {vision['visible_details']}")
+            photo_lines.append(f"Visible details: {vision['visible_details']}")
         if vision.get("quality_signals"):
-            lines.append(f"Quality signals: {vision['quality_signals']}")
+            photo_lines.append(f"Quality signals: {vision['quality_signals']}")
         style = vision.get("style_tags", [])
         if style:
-            lines.append(f"Style: {', '.join(style)}")
+            photo_lines.append(f"Style: {', '.join(style)}")
 
-    if voice_text:
-        lines.append(f"Artisan's own words (transcribed from voice note): {voice_text}")
-
-    if extra_info:
-        lines.append(f"Additional details typed by artisan: {extra_info}")
-
-    context = "\n".join(f"- {l}" for l in lines) if lines else "- (No details provided — base everything on the photo)"
+    artisan_block = (
+        "\n".join(f"- {l}" for l in artisan_lines)
+        if artisan_lines
+        else "- (Artisan gave no name, voice note, or extra details, use the photo only)"
+    )
+    photo_block = "\n".join(f"- {l}" for l in photo_lines) if photo_lines else "- (No photo analysis available)"
 
     return f"""Generate a complete, ready-to-use product listing for this Indian handmade product.
 
-PRODUCT CONTEXT:
-{context}
+WHAT THE ARTISAN TOLD YOU DIRECTLY (this is ground truth, weight it above your own guesses from the photo):
+{artisan_block}
+
+WHAT THE PHOTO SHOWS (use this to fill gaps, not to override what the artisan said):
+{photo_block}
 
 INSTRUCTIONS:
-- Title: Concise, under 80 characters. Lead with the craft/material + product type + key differentiator. No emojis in title.
+- If the artisan gave a product name, the title must be built from it (clean it up or extend it if it's rough, but don't throw it away and invent an unrelated one). If they gave none, lead with craft/material + product type + key differentiator. Under 80 characters, no emojis.
+- If the artisan gave a voice note transcript or typed extra details, you must pull specific, concrete facts from them into the description, price rationale, Instagram caption, or WhatsApp message wherever they fit, not just the photo-derived facts. Do not silently drop something the artisan told you.
 - Description: 150–200 words. Warm, authentic tone. Cover what it is, the craft tradition (include Indian regional context if you can identify it), materials and their properties, handmade quality, practical uses, and brief care note. Avoid generic phrases like "perfect gift".
-- Price: Research realistic INR pricing for this type of handcrafted item on Indian platforms (Etsy, Amazon Handmade India, Instagram shops). Give a range (low–high) that reflects fair artisan wages.
+- Price: Research realistic INR pricing for this type of handcrafted item on Indian platforms (Etsy, Amazon Handmade India, Instagram shops). Give a range (low–high) that reflects fair artisan wages. If the artisan mentioned time taken, technique difficulty, or materials cost, factor that into the rationale.
 - Instagram caption: Hook → 2–3 sentence story → call to action (DM to order / link in bio). Then 8–12 hashtags. Include #handmade #MadeInIndia #VocalForLocal and craft-specific tags.
 - WhatsApp message: Written like a friendly business message to a customer. Warm, conversational. Include product name, 2–3 key features, price range, how to order. Under 90 words. No hashtags.
 - Across all of the above: sound like the artisan or a friend of theirs wrote it, not an AI. No em dashes anywhere. No stock AI phrasing (see writing style rules above).
