@@ -345,7 +345,7 @@ if not photo:
 elif not api_key:
     st.warning("Enter your Google Gemini API key in the sidebar. Get one free at aistudio.google.com")
 
-if st.button("🚀 Generate Listing", type="primary", disabled=not ready, use_container_width=True):
+if st.button("🪔 Generate Listing", type="primary", disabled=not ready, use_container_width=True):
     image_bytes = photo.read()
 
     # ── Vision analysis ──
